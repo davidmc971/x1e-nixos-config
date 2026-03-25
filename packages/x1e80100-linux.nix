@@ -6,8 +6,14 @@
   fetchpatch,
   fetchurl,
   b4,
+  perl,
   ...
 }:
+
+let
+  hpdRefactorMbx = ./msm-mst-patches/01-hpd-refactor-v2.mbx;
+  mstV3Mbx = ./msm-mst-patches/02-msm-dp-mst-v3.mbx;
+in
 
 linuxPackagesFor (buildLinux {
   src = fetchFromGitHub {
@@ -15,7 +21,7 @@ linuxPackagesFor (buildLinux {
     repo = "linux";
     tag = "v6.19";
     forceFetchGit = true;
-    nativeBuildInputs = [ b4 ];
+    nativeBuildInputs = [ b4 perl ];
     preFetch = "export ${lib.toShellVar "NIX_PREFETCH_GIT_CHECKOUT_HOOK" ''
       pushd "$dir"
       git config user.name "nix"
@@ -24,13 +30,39 @@ linuxPackagesFor (buildLinux {
       git fetch 'https://gitlab.com/Linaro/arm64-laptops/linux.git' --depth 106 19e59e1b39ad789a5bf90b0b9850bb11ca9f7ebb
       git cherry-pick --empty=drop 63804fed149a6750ffd28610c5c1c98cce6bd377..19e59e1b39ad789a5bf90b0b9850bb11ca9f7ebb
 
+      mkdir -p /tmp/hpd-patches /tmp/mst-patches
+
+      # Fixup dp_drm.c/.h to match what HPD v2 patch 3 expects
+      bash ${./msm-mst-patches/fix-dp-drm.sh} "$dir"
+      git -C "$dir" commit -a --no-verify -m "prereq: normalize dp_drm for HPD v2 patch 3"
+
+      git mailsplit -o/tmp/hpd-patches/ ${hpdRefactorMbx}
+      for p in $(ls /tmp/hpd-patches/ | sort); do
+        git -C "$dir" apply --ignore-whitespace -C1 "/tmp/hpd-patches/$p" 2>/dev/null || \
+        git -C "$dir" apply --ignore-whitespace -C0 "/tmp/hpd-patches/$p" 2>/dev/null || \
+        echo "Skipping non-applicable patch: $p"
+        git -C "$dir" commit -a --no-verify \
+          -m "$(sed -n '/^Subject:/s/Subject: //p' /tmp/hpd-patches/$p | head -1)" \
+          --allow-empty 2>/dev/null || true
+      done
+
+      git mailsplit -o/tmp/mst-patches/ ${mstV3Mbx}
+      for p in $(ls /tmp/mst-patches/ | sort); do
+        git -C "$dir" apply --ignore-whitespace -C1 "/tmp/mst-patches/$p" 2>/dev/null || \
+        git -C "$dir" apply --ignore-whitespace -C0 "/tmp/mst-patches/$p" 2>/dev/null || \
+        echo "Skipping non-applicable patch: $p"
+        git -C "$dir" commit -a --no-verify \
+          -m "$(sed -n '/^Subject:/s/Subject: //p' /tmp/mst-patches/$p | head -1)" \
+          --allow-empty 2>/dev/null || true
+      done
+
       # Collect some stats
       du -sh .git
 
       popd
     ''}";
 
-    hash = "sha256-qElJ642reD/NX63qEBNDgFFVBWxO0zqQxWXDFHeqJu0=";
+    hash = "sha256-9YzTlTQ/CHUlyoZi5DVTwyAOho+C62cbTMWY8QxI81Q=";
   };
   version = "6.19.0";
 
