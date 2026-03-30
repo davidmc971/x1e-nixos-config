@@ -88,14 +88,14 @@ linuxPackagesFor (buildLinux {
       # See: https://gitlab.com/Linaro/arm64-laptops/linux/-/issues/9
       patch = ./lenovo-yoga-slim7x-camera-regulators-fix.patch;
     }
-    {
-      # Based on:
-      # https://github.com/alexVinarskis/linux-x1e80100-zenbook-a14/pull/1
-      # Apparently this option should be interpreted by userspace, so rotating
-      # in the kernel should not be needed.
-      name = "rotation = <180>;";
-      patch = ./lenovo-yoga-slim7x-camera-rotation.patch;
-    }
+    # {
+    #   # Based on:
+    #   # https://github.com/alexVinarskis/linux-x1e80100-zenbook-a14/pull/1
+    #   # Apparently this option should be interpreted by userspace, so rotating
+    #   # in the kernel should not be needed.
+    #   name = "rotation = <180>;";
+    #   patch = ./lenovo-yoga-slim7x-camera-rotation.patch;
+    # }
   ];
 
   # TODO: Look into the errors and remove this.
