@@ -13,7 +13,7 @@ linuxPackagesFor (buildLinux {
   src = fetchFromGitHub {
     owner = "torvalds";
     repo = "linux";
-    tag = "v7.0";
+    tag = "v7.1";
     forceFetchGit = true;
     nativeBuildInputs = [ b4 ];
     preFetch = "export ${lib.toShellVar "NIX_PREFETCH_GIT_CHECKOUT_HOOK" ''
@@ -30,9 +30,9 @@ linuxPackagesFor (buildLinux {
       popd
     ''}";
 
-    hash = "sha256-p5AFcLDvzNQaPjzzLbSV4Op5vXExVuiS3jCV7CGGyU4=";
+    hash = "sha256-3OcLCkSHLuoBjYHLG+3uAk5zuVipEw4CwS2Wxc7+sXo=";
   };
-  version = "7.0.0";
+  version = "7.1.0";
 
   kernelPatches = [
     {
